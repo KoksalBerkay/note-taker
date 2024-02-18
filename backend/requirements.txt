@@ -1,5 +1,3 @@
 g4f
-flask
-flask-cors
 pyaudio
 speechrecognition
