@@ -2,13 +2,14 @@ import g4f
 import speech_recognition as sr
 
 class NoteTaker:
-    def __init__(self, model="gpt_4", lang="en"):
+    def __init__(self, model="gpt_4", lang="en", extra_completion=True, extra_questions=True):
         self._recognizer = sr.Recognizer()
         self._listening = False
         self._current_session = []
         self._model = model
         self._lang = lang
-        self._extra_completion = True
+        self._extra_completion = extra_completion
+        self._extra_questions = extra_questions
     
     @property
     def recognizer(self):
@@ -30,6 +31,14 @@ class NoteTaker:
     def model(self):
         return self._model
     
+    @property
+    def extra_completion(self):
+        return self._extra_completion
+
+    @property
+    def extra_questions(self):
+        return self._extra_questions
+    
     @lang.setter
     def lang(self, value):
         self._lang = value
@@ -37,6 +46,14 @@ class NoteTaker:
     @model.setter
     def model(self, value):
         self._model = value
+    
+    @extra_completion.setter
+    def extra_completion(self, value):
+        self._extra_completion = value
+    
+    @extra_questions.setter
+    def extra_questions(self, value):
+        self._extra_questions = value
     
     @listening.setter
     def listening(self, value):
@@ -91,11 +108,13 @@ class NoteTaker:
 
         print("Summarizing the session...")
 
-        if self._extra_completion:
-            prompt = f"Please summarize the following text which is taken from a lecture session in Markdown format:\n\n{text}\n\n---\n\nPlease also extend the summary as much as you can with additional information that you know about the topic in a different section."
-        else:
-            prompt = f"Please summarize the following text which is taken from a lecture session in Markdown format:\n\n{text}"
-        
+        prompt = f"Please summarize the following text which is taken from a lecture session in Markdown format:\n\n'{text}'"
+
+        if self.extra_completion:
+            prompt += "\n\n---\n\nPlease also extend the summary as much as you can with additional information that you know about the topic in a different section."
+        if self.extra_questions:
+            prompt += "\n\n---\n\nPlease also generate questions with answers about the topic in a different section."
+
         mdl = self.find_model(self.model)
 
         response = g4f.ChatCompletion.create(

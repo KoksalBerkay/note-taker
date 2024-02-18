@@ -19,5 +19,3 @@ if __name__ == "__main__":
       f.write(summary)
     
     print(f"Summary saved to {os.path.abspath(filename)}")
-
-
