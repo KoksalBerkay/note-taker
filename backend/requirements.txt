@@ -1,3 +1,5 @@
 g4f
 pyaudio
 speechrecognition
+sqlite3
+flask-cors
