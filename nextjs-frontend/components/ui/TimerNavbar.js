@@ -3,54 +3,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { Disclosure } from "@headlessui/react";
-import { MicrophoneIcon } from "@heroicons/react/20/solid";
-import { Bars3Icon, XMarkIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const Navbar = () => {
   const router = useRouter();
-
-  const [isRecording, setIsRecording] = useState(false);
-
-  const startRecording = async () => {
-    setIsRecording(true);
-
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_API_URL + "/api/notes",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "start",
-        }),
-      }
-    );
-
-    const data = await response.json();
-    console.log(data);
-    setIsRecording(false);
-  };
-
-  const stopRecording = async () => {
-    setIsRecording(false);
-
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_API_URL + "/api/notes",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "stop",
-        }),
-      }
-    );
-
-    const data = await response.json();
-    console.log(data);
-  };
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -88,35 +44,6 @@ const Navbar = () => {
                   >
                     Study Timer
                   </Link>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  {isRecording ? (
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="relative inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      <XCircleIcon
-                        className="-ml-1 mr-2 h-5 w-5"
-                        aria-hidden="true"
-                      />
-                      <span>Stop</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={startRecording}
-                      className="relative inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                      <MicrophoneIcon
-                        className="-ml-1 mr-2 h-5 w-5"
-                        aria-hidden="true"
-                      />
-                      <span>Record</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>

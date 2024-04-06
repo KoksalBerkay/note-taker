@@ -61,7 +61,7 @@ const Note = () => {
       <main className="p-24">
         {note.date && (
           <>
-            <h1 className="text-6xl font-bold text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-center">
               Note from {parseDate(note.date)}
             </h1>
             <hr className="my-10" />

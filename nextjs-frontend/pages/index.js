@@ -20,7 +20,7 @@ const Home = () => {
       );
       const data = await response.json();
       setCards(data.data);
-      console.log(data.data);
+      // console.log(data.data);
     };
 
     fetchCards();
@@ -33,7 +33,9 @@ const Home = () => {
         <title>NoteTaker</title>
       </Head>
       <main className={`p-24 ${inter.className}`}>
-        <h1 className="text-6xl font-bold text-center">Class Summaries</h1>
+        <h1 className="text-4xl md:text-6xl font-bold text-center">
+          Class Summaries
+        </h1>
         <hr className="my-10" />
         <div className="space-y-5">
           {cards ? (
