@@ -6,15 +6,32 @@ NoteTaker is a simple application that uses AI to take notes for you during lect
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/KoksalBerkay/note-taker.git && cd note-taker`
-2. Navigate to the backend directory: `cd backend`
-3. Install pip dependencies: `pip install -r requirements.txt`
-4. Run the application: `python app.py`
+1. Clone the repository:
+
+```sh
+git clone https://github.com/KoksalBerkay/note-taker.git && cd note-taker
+```
+
+2. Install node packages in `frontend/` & run frontend:
+
+```sh
+cd nextjs-frontend
+npm install
+npm run dev
+```
+
+3. Install pip dependencies in `backend/` & run backend:
+
+```sh
+cd ../backend
+pip install -r requirements.txt
+python app.py
+```
 
 ## To-Do
 
-- [ ] Create a frontend for the application
 - [ ] Improve the microphone listening functionality
+- [ ] Create the backend for the study timer
 
 ## License
 

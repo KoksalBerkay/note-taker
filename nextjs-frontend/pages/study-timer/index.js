@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TimerNavbar from "../../components/ui/TimerNavbar";
 
 const StudyTimerPage = () => {
-  const handleLeftButtonClick = () => {
-    console.log("Left Button clicked");
-    // Add your custom logic here
+  const [isPauseButtonActive, setIsPauseButtonActive] = useState(false);
+  const [stage, setStage] = useState("work");
+  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+
+  // Pause button resets when stage changes
+  useEffect(() => {
+    setIsPauseButtonActive(false);
+  }, [stage]);
+
+  const handlePauseButtonClick = () => {
+    setIsPauseButtonActive((prevState) => !prevState);
+    toggleButtonRingEffect("pauseButton");
   };
 
-  const handleRightButtonClick = () => {
-    console.log("Right Button clicked");
-    // Add your custom logic here
+  const handleNextButtonClick = () => {
+    setStage((prevStage) => (prevStage === "work" ? "break" : "work"));
+    toggleButtonRingEffect("nextButton");
   };
 
   const handleStatisticsButtonClick = () => {
-    console.log("Statistics Button clicked");
-    // Add your custom logic here
+    setIsStatisticsOpen((prevState) => !prevState);
+    toggleButtonRingEffect("statisticsButton");
+  };
+
+  const toggleButtonRingEffect = (buttonId) => {
+    const button = document.getElementById(buttonId);
+    button.classList.toggle("ring-2");
+    if (stage === "break") {
+      button.classList.toggle("ring-green-600");
+    } else {
+      button.classList.toggle("ring-blue-600");
+    }
   };
 
   return (
@@ -22,13 +41,28 @@ const StudyTimerPage = () => {
       <TimerNavbar />
       <div className="flex flex-col items-center justify-center flex-grow">
         <div className="space-y-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-500">Stage</h1>
-          <div className="text-8xl font-bold text-blue-500">00:00</div>
+          <h1
+            className={`text-3xl font-bold ${
+              stage === "work" ? "text-blue-500" : "text-green-500"
+            }`}
+          >
+            {stage === "work" ? "Work" : "Break"} Stage
+          </h1>
+          <div
+            className={`text-8xl font-bold ${
+              stage === "work" ? "text-blue-500" : "text-green-500"
+            }`}
+          >
+            00:00
+          </div>
         </div>
         <div className="flex space-x-8 mt-12">
           <button
-            className="bg-blue-500 text-white rounded-full p-6"
-            onClick={handleLeftButtonClick}
+            id="pauseButton"
+            className={`bg-blue-500 text-white rounded-full p-6 transition hover:bg-blue-600 ${
+              stage === "break" && "bg-green-500 hover:bg-green-600"
+            }`}
+            onClick={handlePauseButtonClick}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -38,16 +72,28 @@ const StudyTimerPage = () => {
               stroke="currentColor"
               className="w-6 h-6"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-              />
+              {isPauseButtonActive ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 5.25v13.5m-7.5-13.5v13.5"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                />
+              )}
             </svg>
           </button>
           <button
-            className="bg-blue-500 text-white rounded-full p-4"
-            onClick={handleRightButtonClick}
+            id="nextButton"
+            // className="bg-blue-500 text-white rounded-full p-4 transition hover:bg-blue-600"
+            className={`bg-blue-500 text-white rounded-full p-4 transition hover:bg-blue-600 ${
+              stage === "break" && "bg-green-500 hover:bg-green-600"
+            }`}
+            onClick={handleNextButtonClick}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +113,10 @@ const StudyTimerPage = () => {
         </div>
         <div className="mt-12">
           <button
-            className="bg-blue-500 text-white px-8 py-4 rounded-md text-xl"
+            id="statisticsButton"
+            className={`bg-blue-500 text-white px-8 py-4 rounded-md text-xl transition hover:bg-blue-600 ${
+              stage === "break" && "bg-green-500 hover:bg-green-600"
+            }`}
             onClick={handleStatisticsButtonClick}
           >
             📈 Statistics

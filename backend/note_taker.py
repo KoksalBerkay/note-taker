@@ -145,7 +145,7 @@ class NoteTaker:
         if self.extra_completion:
             prompt += "\n\n---\n\nPlease also extend the summary as much as you can with additional information that you know about the topic in a different section."
         if self.extra_questions:
-            prompt += "\n\n---\n\nPlease also generate questions with answers about the topic in a different section."
+            prompt += "\n\n---\n\nPlease also generate questions with answers about the topic for active recall practice in a different section."
 
         mdl = self.find_model(self.model)
 
