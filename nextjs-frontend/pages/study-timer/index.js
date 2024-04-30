@@ -5,11 +5,30 @@ const StudyTimerPage = () => {
   const [isPauseButtonActive, setIsPauseButtonActive] = useState(false);
   const [stage, setStage] = useState("work");
   const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+  const [timer, setTimer] = useState(0);
 
   // Pause button resets when stage changes
   useEffect(() => {
     setIsPauseButtonActive(false);
   }, [stage]);
+
+  // Update timer value
+  useEffect(() => {
+    let interval;
+    if (stage === "work" && isPauseButtonActive) {
+      interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer + 1);
+      }, 1000);
+    } else if (stage === "break" && timer > 0 && isPauseButtonActive) {
+      interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer - 1); // Count backward
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [stage, isPauseButtonActive, timer]);
 
   const handlePauseButtonClick = () => {
     setIsPauseButtonActive((prevState) => !prevState);
@@ -18,6 +37,13 @@ const StudyTimerPage = () => {
 
   const handleNextButtonClick = () => {
     setStage((prevStage) => (prevStage === "work" ? "break" : "work"));
+    if (stage === "break") {
+      setTimer(0); // Reset timer
+    } else if (stage === "work") {
+      // Dynamically calculate break time based on break percentage
+      const initialBreakTime = Math.floor(timer * (25 / 100));
+      setTimer(initialBreakTime);
+    }
     toggleButtonRingEffect("nextButton");
   };
 
@@ -34,6 +60,16 @@ const StudyTimerPage = () => {
     } else {
       button.classList.toggle("ring-blue-600");
     }
+  };
+
+  // Function to format seconds into "00:00" format
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds =
+      remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+    return `${formattedMinutes}:${formattedSeconds}`;
   };
 
   return (
@@ -53,7 +89,7 @@ const StudyTimerPage = () => {
               stage === "work" ? "text-blue-500" : "text-green-500"
             }`}
           >
-            00:00
+            {formatTime(timer)}
           </div>
         </div>
         <div className="flex space-x-8 mt-12">
