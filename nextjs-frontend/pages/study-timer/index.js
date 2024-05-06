@@ -5,7 +5,7 @@ const StudyTimerPage = () => {
   const [isPauseButtonActive, setIsPauseButtonActive] = useState(false);
   const [stage, setStage] = useState("work");
   const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
-  const [timer, setTimer] = useState(1000);
+  const [timer, setTimer] = useState(0);
 
   // Pause button resets when stage changes
   useEffect(() => {
