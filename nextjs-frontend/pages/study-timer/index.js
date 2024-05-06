@@ -5,7 +5,7 @@ const StudyTimerPage = () => {
   const [isPauseButtonActive, setIsPauseButtonActive] = useState(false);
   const [stage, setStage] = useState("work");
   const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
-  const [timer, setTimer] = useState(0);
+  const [timer, setTimer] = useState(1000);
 
   // Pause button resets when stage changes
   useEffect(() => {
@@ -35,7 +35,33 @@ const StudyTimerPage = () => {
     toggleButtonRingEffect("pauseButton");
   };
 
-  const handleNextButtonClick = () => {
+  const handleNextButtonClick = async () => {
+    if (stage === "work" && timer > 0) {
+      const data = {
+        stage: "work",
+        time_spent: timer,
+        date: new Date().getTime(),
+      };
+      try {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_URL + "/api/study-timer",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to push data to the API.");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     setStage((prevStage) => (prevStage === "work" ? "break" : "work"));
     if (stage === "break") {
       setTimer(0); // Reset timer

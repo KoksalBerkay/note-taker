@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from flask_cors import CORS
 from note_taker import NoteTaker
+from study_timer import StudyTimer
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -9,6 +10,8 @@ CORS(app)
 
 note_taker = NoteTaker()
 note_taker.lang = "en"
+
+timer = StudyTimer()
 
 @app.route("/api/notes", methods=["POST"])
 def notes():
@@ -92,6 +95,42 @@ def get_notes():
     "message": "Retrieved notes!",
     "data": notes_in_dicts
   })
+
+@app.route("/api/study-timer", methods=["GET", "POST"])
+def study_timer():
+    if request.method == "GET":
+        # Handle GET request to fetch study timer records
+        study_timer_records = timer.fetch()
+        return jsonify({
+            "status": "success",
+            "message": "Retrieved study timer records",
+            "data": study_timer_records
+        })
+
+    elif request.method == "POST":
+        # Handle POST request
+        data = request.get_json()
+        stage = data.get("stage")
+        time_spent = data.get("time_spent")
+        date = data.get("date")
+
+        if stage is None or time_spent is None or date is None:
+            return jsonify({
+                "status": "error",
+                "message": "Incomplete data provided"
+            }), 400
+
+        # Insert the study timer record into the database
+        timer.insert(stage, time_spent, date)
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "stage": stage,
+                "time_spent": time_spent,
+                "date": date
+            }
+        }), 201
   
 if __name__ == "__main__":
   if not os.path.exists("summaries"):
