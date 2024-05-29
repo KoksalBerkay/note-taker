@@ -4,8 +4,10 @@ import TimerNavbar from "../../components/ui/TimerNavbar";
 const StudyTimerPage = () => {
   const [isPauseButtonActive, setIsPauseButtonActive] = useState(false);
   const [stage, setStage] = useState("work");
-  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+  // const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
   const [timer, setTimer] = useState(0);
+  const [totalBreakTime, setTotalBreakTime] = useState(0);
+  const breakPercentage = 25;
 
   // Pause button resets when stage changes
   useEffect(() => {
@@ -35,41 +37,67 @@ const StudyTimerPage = () => {
     toggleButtonRingEffect("pauseButton");
   };
 
+  const pushDataToAPI = async (data) => {
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_URL + "/api/study-timer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to push data to the API.");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleNextButtonClick = async () => {
     if (stage === "work" && timer > 0) {
+      // API call for work time
       const data = {
         stage: "work",
         time_spent: timer,
         date: new Date().getTime(),
       };
-      try {
-        const response = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + "/api/study-timer",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          }
-        );
+      pushDataToAPI(data);
+    } else if (stage === "break" && timer === 0 && totalBreakTime > 0) {
+      // API call for break time with total break time
+      const data = {
+        stage: "break",
+        time_spent: totalBreakTime,
+        date: new Date().getTime(),
+      };
+      pushDataToAPI(data);
+    } else if (stage === "break" && timer > 0) {
+      // API call for break time with used break time
+      const data = {
+        stage: "break",
+        time_spent: totalBreakTime - timer,
+        date: new Date().getTime(),
+      };
+      pushDataToAPI(data);
+    }
 
-        if (!response.ok) {
-          throw new Error("Failed to push data to the API.");
-        }
-      } catch (error) {
-        console.error(error);
-      }
+    // Data pushed to API, now deal with timer
+    if (stage === "break") {
+      setTimer(0);
+    } else if (stage === "work") {
+      // Dynamically calculate break time based on break percentage
+      const initialBreakTime = Math.floor(timer * (breakPercentage / 100));
+      setTimer(initialBreakTime);
+      setTotalBreakTime(
+        (prevTotalBreakTime) => prevTotalBreakTime + initialBreakTime
+      );
     }
 
     setStage((prevStage) => (prevStage === "work" ? "break" : "work"));
-    if (stage === "break") {
-      setTimer(0); // Reset timer
-    } else if (stage === "work") {
-      // Dynamically calculate break time based on break percentage
-      const initialBreakTime = Math.floor(timer * (25 / 100));
-      setTimer(initialBreakTime);
-    }
     toggleButtonRingEffect("nextButton");
   };
 
