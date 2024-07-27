@@ -4,9 +4,18 @@ from flask_cors import CORS
 from note_taker import NoteTaker
 from study_timer import StudyTimer
 from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+ALLOWED_EXTENSIONS = {"mp3", "wav", "m4a", "flac", "aac", "aiff", "ogg"}
 
 app = Flask(__name__)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 CORS(app)
+
+# Ensure the upload folder exists
+if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+    os.makedirs(app.config["UPLOAD_FOLDER"])
 
 note_taker = NoteTaker()
 note_taker.lang = "en"
@@ -36,7 +45,7 @@ def notes():
       "message": "summary complete!",
       "data": str(summary)
     })
-  
+
   elif action == "stop":
     note_taker.stop()
 
@@ -44,7 +53,7 @@ def notes():
       "status": "success",
       "message": "Stopped listening!"
     })
-  
+
   else:
     return jsonify({
       "status": "error",
@@ -73,7 +82,7 @@ def get_note_by_id(id):
       "status": "error",
       "message": "Note not found!"
     })
-  
+
 @app.route("/api/notes", methods=["GET"])
 def get_notes():
   all_notes = note_taker.get_all()
@@ -131,7 +140,36 @@ def study_timer():
                 "date": date
             }
         }), 201
-  
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/api/upload-audio", methods=["POST"])
+def upload_audio():
+        if request.method == 'POST':
+            # check if the post request has the file part
+            if 'file' not in request.files:
+                return jsonify({
+                    "status": "error",
+                    "message": "No file part"
+                }), 400
+            file = request.files['file']
+            # If the user does not select a file, the browser submits an
+            # empty file without a filename.
+            if file.filename == '':
+                return jsonify({
+                    "status": "error",
+                    "message": "No selected file"
+                }), 400
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                return jsonify({
+                    "status": "success",
+                    "message": "File uploaded successfully"
+                }), 201
+
 if __name__ == "__main__":
   if not os.path.exists("summaries"):
     os.mkdir("summaries")

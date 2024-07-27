@@ -1,3 +1,4 @@
 backend/summaries/*
 backend/__pycache__
 backend/*.db
+backend/uploads/*

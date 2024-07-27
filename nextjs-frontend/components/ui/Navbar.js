@@ -5,11 +5,13 @@ import { useRouter } from "next/router";
 import { Disclosure } from "@headlessui/react";
 import { MicrophoneIcon } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { useRef } from "react";
 
 const Navbar = () => {
   const router = useRouter();
 
   const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef(null);
 
   const startRecording = async () => {
     setIsRecording(true);
@@ -24,7 +26,7 @@ const Navbar = () => {
         body: JSON.stringify({
           action: "start",
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -45,8 +47,38 @@ const Navbar = () => {
         body: JSON.stringify({
           action: "stop",
         }),
-      }
+      },
     );
+
+    const data = await response.json();
+    console.log(data);
+  };
+
+  const handleUploadClick = () => {
+    // Click the file picker
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_API_URL + "/api/upload-audio",
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(errorData.message);
+      return;
+    }
 
     const data = await response.json();
     console.log(data);
@@ -91,7 +123,20 @@ const Navbar = () => {
                 </div>
               </div>
               <div className="flex items-center">
-                <div className="flex-shrink-0">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUploadClick}
+                    className="relative inline-flex items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 mr-2"
+                  >
+                    <span>Upload</span>
+                  </button>
                   {isRecording ? (
                     <button
                       type="button"
