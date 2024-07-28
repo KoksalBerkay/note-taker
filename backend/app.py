@@ -164,7 +164,17 @@ def upload_audio():
                 }), 400
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+
+                note_taker.transcribe_audio_file(file_path)
+
+                summary = note_taker.summarize()
+                os.remove(file_path)
+                filename = f"summaries/summary_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.md"
+                with open(filename, "w", encoding="utf-8") as f:
+                        f.write(summary)
+
                 return jsonify({
                     "status": "success",
                     "message": "File uploaded successfully"

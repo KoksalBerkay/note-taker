@@ -3,3 +3,4 @@ pyaudio
 speechrecognition
 sqlite3
 flask-cors
+pydub

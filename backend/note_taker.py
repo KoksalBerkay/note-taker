@@ -1,9 +1,11 @@
 import g4f
 import speech_recognition as sr
 import sqlite3
+from pydub import AudioSegment
+import os
 
 class NoteTaker:
-    def __init__(self, model="gpt_4", lang="en", extra_completion=True, extra_questions=True):
+    def __init__(self, model="gpt-4", lang="en", extra_completion=True, extra_questions=True):
         self._recognizer = sr.Recognizer()
         self._listening = False
         self._current_session = []
@@ -27,8 +29,8 @@ class NoteTaker:
 
         self._conn = conn
         self._c = c
-    
-    
+
+
     @property
     def recognizer(self):
         return self._recognizer
@@ -36,19 +38,19 @@ class NoteTaker:
     @property
     def listening(self):
         return self._listening
-    
+
     @property
     def current_session(self):
         return self._current_session
-    
+
     @property
     def lang(self):
         return self._lang
-    
+
     @property
     def model(self):
         return self._model
-    
+
     @property
     def extra_completion(self):
         return self._extra_completion
@@ -56,23 +58,23 @@ class NoteTaker:
     @property
     def extra_questions(self):
         return self._extra_questions
-    
+
     @lang.setter
     def lang(self, value):
         self._lang = value
-    
+
     @model.setter
     def model(self, value):
         self._model = value
-    
+
     @extra_completion.setter
     def extra_completion(self, value):
         self._extra_completion = value
-    
+
     @extra_questions.setter
     def extra_questions(self, value):
         self._extra_questions = value
-    
+
     @listening.setter
     def listening(self, value):
         self._listening = value
@@ -105,11 +107,11 @@ class NoteTaker:
             return g4f.models.llama2_70b
         else:
             return g4f.models.gpt_35_turbo_16k_0613
-    
+
     def listen(self):
         if self.listening:
             return
-        
+
         self.listening = True
 
         if self._extra_completion:
@@ -131,9 +133,38 @@ class NoteTaker:
         except KeyboardInterrupt:
             print("\nStopping listening...")
             self.stop()
-    
+
     def stop(self):
         self.listening = False
+
+    def transcribe_audio_file(self, file_path):
+            # Convert the file to WAV format
+            wav_file_path = file_path.rsplit('.', 1)[0] + '.wav'
+            try:
+                audio = AudioSegment.from_file(file_path)
+                audio.export(wav_file_path, format='wav')
+            except Exception as e:
+                print(f"Failed to convert file to WAV: {e}")
+                return
+
+            # Transcribe the WAV file
+            try:
+                with sr.AudioFile(wav_file_path) as source:
+                    audio = self.recognizer.record(source)
+                    try:
+                        text = self.recognizer.recognize_google(audio, language=self.lang)
+                        print(f"Transcribed: {text}")
+                        self.current_session.append(text)
+                    except sr.UnknownValueError:
+                        print("Sorry, I didn't get that.")
+                    except sr.RequestError as e:
+                        print(f"Could not request results from the speech recognition service; {e}")
+            except Exception as e:
+                print(f"An error occurred while processing the WAV file: {e}")
+            finally:
+                # Remove the WAV file
+                if os.path.exists(wav_file_path):
+                    os.remove(wav_file_path)
 
     def summarize(self):
         text = ", ".join(self.current_session)
@@ -161,7 +192,7 @@ class NoteTaker:
 
         if not response:
             return "Sorry, I couldn't summarize the session."
-        
+
         self.save(text, str(response))
-        
+
         return str(response)
