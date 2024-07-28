@@ -6,6 +6,7 @@ import { Disclosure } from "@headlessui/react";
 import { MicrophoneIcon } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useRef } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const Navbar = () => {
   const router = useRouter();
@@ -76,12 +77,10 @@ const Navbar = () => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(errorData.message);
-      return;
+      toast.error(errorData.message);
+    } else {
+      toast.success("Audio file uploaded successfully.");
     }
-
-    const data = await response.json();
-    console.log(data);
   };
 
   return (
@@ -186,6 +185,11 @@ const Navbar = () => {
               </Disclosure.Button>
             </div>
           </Disclosure.Panel>
+
+          <Toaster
+            position="bottom-left"
+            toastOptions={{ style: { fontSize: "1.25rem" } }}
+          />
         </>
       )}
     </Disclosure>

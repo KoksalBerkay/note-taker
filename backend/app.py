@@ -169,6 +169,11 @@ def upload_audio():
                     "status": "success",
                     "message": "File uploaded successfully"
                 }), 201
+            else:
+                return jsonify({
+                    "status": "error",
+                    "message": "Invalid file format"
+                }), 400
 
 if __name__ == "__main__":
   if not os.path.exists("summaries"):
