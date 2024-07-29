@@ -38,7 +38,7 @@ def notes():
     with open(filename, "w", encoding="utf-8") as f:
       f.write(summary)
 
-    print("Summary written to: {filename}")
+    print("Summary written to: ", filename)
 
     return jsonify({
       "status": "success",
@@ -170,7 +170,6 @@ def upload_audio():
                 note_taker.transcribe_audio_file(file_path)
 
                 summary = note_taker.summarize()
-                os.remove(file_path)
                 filename = f"summaries/summary_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.md"
                 with open(filename, "w", encoding="utf-8") as f:
                         f.write(summary)

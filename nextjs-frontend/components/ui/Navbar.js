@@ -30,8 +30,16 @@ const Navbar = () => {
       },
     );
 
-    const data = await response.json();
-    console.log(data);
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast.error(errorData.message);
+    } else {
+      if (router.pathname === "/") {
+        router.reload();
+      } else {
+        router.push("/");
+      }
+    }
     setIsRecording(false);
   };
 
@@ -51,8 +59,12 @@ const Navbar = () => {
       },
     );
 
-    const data = await response.json();
-    console.log(data);
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast.error(errorData.message);
+    } else {
+      toast.success("Audio recording stopped successfully.");
+    }
   };
 
   const handleUploadClick = () => {
@@ -80,6 +92,7 @@ const Navbar = () => {
       toast.error(errorData.message);
     } else {
       toast.success("Audio file uploaded successfully.");
+      router.push("/");
     }
   };
 

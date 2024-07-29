@@ -91,7 +91,7 @@ class NoteTaker:
         return self.execute_query("SELECT * FROM classes WHERE id=?", (id,))
 
     def get_all(self):
-        return self.execute_query("SELECT * FROM classes")
+        return self.execute_query("SELECT * FROM classes ORDER BY date DESC")
 
     def find_model(self, model_name):
         model_name = model_name.lower()
@@ -108,11 +108,15 @@ class NoteTaker:
         else:
             return g4f.models.gpt_35_turbo_16k_0613
 
+    def reset_session(self):
+        self._current_session = []
+
     def listen(self):
         if self.listening:
             return
 
         self.listening = True
+        self.reset_session()
 
         if self._extra_completion:
             print("Extra completion is enabled.")
@@ -138,22 +142,30 @@ class NoteTaker:
         self.listening = False
 
     def transcribe_audio_file(self, file_path):
-            # Convert the file to WAV format
-            wav_file_path = file_path.rsplit('.', 1)[0] + '.wav'
-            try:
-                audio = AudioSegment.from_file(file_path)
-                audio.export(wav_file_path, format='wav')
-            except Exception as e:
-                print(f"Failed to convert file to WAV: {e}")
-                return
+        self.reset_session()
+        # Convert the file to WAV formats
+        wav_file_path = file_path.rsplit('.', 1)[0] + '.wav'
+        try:
+            audio = AudioSegment.from_file(file_path)
+            audio.export(wav_file_path, format='wav')
+        except Exception as e:
+            print(f"Failed to convert file to WAV: {e}")
+            return
 
-            # Transcribe the WAV file
+        # Split the audio into chunks
+        chunk_length_ms = 20000  # 20 seconds
+        chunks = [audio[i:i + chunk_length_ms] for i in range(0, len(audio), chunk_length_ms)]
+
+        # Process each chunk
+        for i, chunk in enumerate(chunks):
+            chunk_wav_path = f"{file_path.rsplit('.', 1)[0]}_chunk{i}.wav"
+            chunk.export(chunk_wav_path, format='wav')
             try:
-                with sr.AudioFile(wav_file_path) as source:
+                with sr.AudioFile(chunk_wav_path) as source:
                     audio = self.recognizer.record(source)
                     try:
                         text = self.recognizer.recognize_google(audio, language=self.lang)
-                        print(f"Transcribed: {text}")
+                        print(f"Transcribed chunk {i}: {text}")
                         self.current_session.append(text)
                     except sr.UnknownValueError:
                         print("Sorry, I didn't get that.")
@@ -162,16 +174,20 @@ class NoteTaker:
             except Exception as e:
                 print(f"An error occurred while processing the WAV file: {e}")
             finally:
-                # Remove the WAV file
-                if os.path.exists(wav_file_path):
-                    os.remove(wav_file_path)
+                # Remove the chunk WAV file
+                if os.path.exists(chunk_wav_path):
+                    os.remove(chunk_wav_path)
+
+            # Remove the original WAV file
+            if os.path.exists(wav_file_path):
+                os.remove(wav_file_path)
 
     def summarize(self):
         text = ", ".join(self.current_session)
 
         print("Summarizing the session...")
 
-        prompt = f"Please summarize the following text which is taken from a lecture session in Markdown format and in its language:\n\n'{text}'"
+        prompt = f"Please summarize the following text which is taken from a lecture session in the same language as the input text, which is '{self.lang}', in Markdown format:\n\n'{text}'"
 
         if self.extra_completion:
             prompt += "\n\n---\n\nPlease also extend the summary as much as you can with additional information that you know about the topic in a different section."
