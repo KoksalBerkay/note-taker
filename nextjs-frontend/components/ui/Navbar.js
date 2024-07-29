@@ -92,7 +92,11 @@ const Navbar = () => {
       toast.error(errorData.message);
     } else {
       toast.success("Audio file uploaded successfully.");
-      router.push("/");
+      if (router.pathname === "/") {
+        router.reload();
+      } else {
+        router.push("/");
+      }
     }
   };
 
