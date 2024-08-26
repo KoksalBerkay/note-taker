@@ -105,9 +105,7 @@ class NoteTaker:
             return g4f.models.llama2_13b
         elif model_name == "llama_70b":
             return g4f.models.llama2_70b
-        else:
-            return g4f.models.gpt_35_turbo_16k_0613
-
+       
     def reset_session(self):
         self._current_session = []
 
