@@ -16,6 +16,7 @@ const Note = () => {
   const [note, setNote] = useState({});
   const [showTranscript, setShowTranscript] = useState(false);
   const [inputText, setInputText] = useState("");
+  const [questions, setQuestions] = useState([]); // Store questions and answers
 
   const parseDate = (date) => {
     const d = new Date(date);
@@ -31,14 +32,33 @@ const Note = () => {
     const fetchNote = async () => {
       try {
         const response = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + "/api/notes/" + router.query.id,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/notes/${router.query.id}/chat`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch note");
         }
         const data = await response.json();
-        setNote(data.data);
-        // console.log(data.data);
+
+        // Validate and process the note data
+        const noteData = data.data || {};
+
+        // Ensure `questions` and `answers` are arrays
+        const questions = Array.isArray(noteData.questions)
+          ? noteData.questions
+          : [];
+        const answers = Array.isArray(noteData.answers) ? noteData.answers : [];
+
+        // Set note data
+        setNote(noteData);
+
+        // Combine questions and answers into an array of objects
+        const combinedQA = questions.map((question, index) => ({
+          question,
+          answer: answers[index] || "No answer available.", // Handle missing answers
+        }));
+
+        // Update state with questions and answers
+        setQuestions(combinedQA);
       } catch (error) {
         console.error("Error fetching note:", error);
       }
@@ -53,9 +73,37 @@ const Note = () => {
     ? `NoteTaker - Note ${router.query.id.toString()}`
     : "NoteTaker";
 
-  const handleSend = () => {
-    console.log("User Input:", inputText);
-    setInputText(""); // Clear the textbox after sending
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_URL +
+          "/api/notes/" +
+          router.query.id +
+          "/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: inputText,
+          }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+      const data = await response.json();
+      setQuestions((prev) => [
+        ...prev,
+        { question: inputText, answer: data.data.response },
+      ]);
+      setInputText(""); // Clear the textbox after sending
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
@@ -109,6 +157,20 @@ const Note = () => {
             <br />
             <h1 className="text-4xl font-bold">Transcript</h1>
             <Markdown className="prose">{note.transcript}</Markdown>
+          </div>
+        )}
+        {questions.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4">Chat History</h2>
+            <ul>
+              {questions.map((qa, index) => (
+                <li key={index} className="mb-4">
+                  <strong>Q:</strong> {qa.question}
+                  <br />
+                  <strong>A:</strong> <Markdown>{qa.answer}</Markdown>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </main>

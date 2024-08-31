@@ -47,8 +47,11 @@ python app.py
 ## To-Do
 
 - [x] Create the backend for the study timer
+- [x] Write the backend for the "Continue Chatting" feature
+- [ ] Clean up the code for the "Continue Chatting" feature
 - [ ] Add analytics for the study timer
-- [ ] Write the backend for the "Continue Chatting" feature
+- [ ] Enhance the UI/UX overall
+
 
 ## License
 

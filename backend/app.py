@@ -60,28 +60,100 @@ def notes():
       "message": "Invalid action!"
     })
 
+# TODO: Merge the "/api/notes/<int:id>" and the "/api/notes/<int:id>/chat" endpoints into one
+#      and change the frontend accordingly
+
 @app.route("/api/notes/<int:id>", methods=["GET"])
 def get_note_by_id(id):
-  note = note_taker.get_by_id(id)
+    note = note_taker.get_by_id(id)
+    if note:
+        # Fetch associated questions and answers
+        questions_answers = note_taker.execute_query("SELECT question, answer FROM questions_answers WHERE note_id=?", (id,))
+        qa_list = [{"question": qa[0], "answer": qa[1]} for qa in questions_answers]
 
-  print(note)
+        return jsonify({
+            "status": "success",
+            "message": "Retrieved note!",
+            "data": {
+                "id": note[0][0],
+                "transcript": note[0][1],
+                "summary": note[0][2],
+                "date": note[0][3],
+                "questions_answers": qa_list
+            }
+        })
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Note not found!"
+        })
 
-  if note:
-    return jsonify({
-      "status": "success",
-      "message": "Retrieved note!",
-      "data": {
-        "id": note[0][0],
-        "transcript": note[0][1],
-        "summary": note[0][2],
-        "date": note[0][3]
-      }
-    })
-  else:
-    return jsonify({
-      "status": "error",
-      "message": "Note not found!"
-    })
+
+
+@app.route("/api/notes/<int:id>/chat", methods=["GET", "POST"])
+def chat(id):
+    if request.method == "GET":
+        # Fetch the note by ID
+        note = note_taker.get_by_id(id)
+        if note:
+            note_data = note[0]
+            # Fetch associated questions and answers
+            questions_answers = note_taker.execute_query("SELECT question, answer FROM questions_answers WHERE note_id=?", (id,))
+            qa_list = [{"question": qa[0], "answer": qa[1]} for qa in questions_answers]
+
+            return jsonify({
+                "status": "success",
+                "message": "Retrieved note!",
+                "data": {
+                    "id": note_data[0],
+                    "transcript": note_data[1],
+                    "summary": note_data[2],
+                    "date": note_data[3],
+                    "questions": [qa["question"] for qa in qa_list],  # Ensure this is correctly formatted
+                    "answers": [qa["answer"] for qa in qa_list]     # Ensure this is correctly formatted
+                }
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Note not found!"
+            })
+
+    elif request.method == "POST":
+        # Handle POST request
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid request, 'message' field is required."
+            }), 400
+
+        message = data['message']
+        note = note_taker.get_by_id(id)
+
+        if not note:
+            return jsonify({
+                "status": "error",
+                "message": "Note not found!"
+            }), 404
+
+        # Process chat message
+        response = note_taker.chat(id, message)
+        return jsonify({
+            "status": "success",
+            "message": "Chat response generated!",
+            "data": {
+                "response": response
+            }
+        })
+    else:
+        # This handles any method other than GET or POST
+        return jsonify({
+            "status": "error",
+            "message": "Method not allowed"
+        }), 405
+
+
 
 @app.route("/api/notes", methods=["GET"])
 def get_notes():
